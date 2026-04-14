@@ -1,12 +1,6 @@
-import json
-import os
-import tempfile
-from datetime import datetime
-from pathlib import Path
+from datetime import datetime, timezone
 
 import pytest
-
-from newspull.models import RawArticle, RankedArticle
 
 
 @pytest.fixture
@@ -27,6 +21,7 @@ def tmp_prefs_path(tmp_path, monkeypatch):
 
 @pytest.fixture
 def sample_raw_article():
+    from newspull.models import RawArticle
     return RawArticle(
         title="GLM-5 Announced With Major Improvements",
         url="https://example.com/glm5",
@@ -37,6 +32,7 @@ def sample_raw_article():
 
 @pytest.fixture
 def sample_ranked_article():
+    from newspull.models import RankedArticle
     return RankedArticle(
         title="GLM-5 Announced With Major Improvements",
         url="https://example.com/glm5",
@@ -45,7 +41,7 @@ def sample_ranked_article():
         credibility_score=0.9,
         rank_score=0.85,
         cross_ref_count=0,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(timezone.utc),
     )
 
 
