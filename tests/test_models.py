@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from newspull.models import RawArticle, SummarizedArticle, RankedArticle
 
 
@@ -26,7 +26,7 @@ def test_ranked_article_has_scores():
         credibility_score=0.9,
         rank_score=0.85,
         cross_ref_count=2,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
     )
     assert a.credibility_score == 0.9
     assert a.rank_score == 0.85
