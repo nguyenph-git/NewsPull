@@ -27,6 +27,14 @@ def test_deep_merge_updates_nested():
     assert result["topics"]["ai"] == 1.0  # unchanged
 
 
+def test_deep_merge_does_not_alias_untouched_nested_dicts():
+    base = {"a": {"b": {"c": 1}}, "x": {"y": 2}}
+    delta = {"x": {"y": 99}}
+    result = deep_merge(base, delta)
+    result["a"]["b"]["c"] = 999
+    assert base["a"]["b"]["c"] == 1
+
+
 def test_deep_merge_does_not_mutate_base():
     base = {"a": {"b": 1}}
     delta = {"a": {"b": 2}}

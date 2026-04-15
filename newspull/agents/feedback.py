@@ -1,14 +1,18 @@
 import asyncio
+import copy
 import json
+import logging
 import os
 
 from zhipuai import ZhipuAI
 
 from ..config import load_prefs, save_prefs
 
+logger = logging.getLogger(__name__)
+
 
 def deep_merge(base: dict, update: dict) -> dict:
-    result = base.copy()
+    result = copy.deepcopy(base)
     for key, value in update.items():
         if isinstance(value, dict) and isinstance(result.get(key), dict):
             result[key] = deep_merge(result[key], value)
@@ -41,5 +45,6 @@ class FeedbackAgent:
             merged = deep_merge(prefs, delta)
             save_prefs(merged)
             return True
-        except Exception:
+        except Exception as exc:
+            logger.debug("FeedbackAgent.process failed: %s", exc)
             return False
