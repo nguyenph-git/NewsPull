@@ -27,7 +27,7 @@ class DigesterAgent:
         try:
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model="glm-4-flashx",
+                model="glm-4",
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
             )
@@ -51,7 +51,8 @@ class DigesterAgent:
                         raise ValueError(
                             "GLM model not found. Please verify:\n"
                             "  1. Your API key has access to the model\n"
-                            "  2. Try changing model in digester.py from 'glm-4-flashx' to 'glm-4-flash' or 'glm-4'"
+                            "  2. Current model in digester.py: glm-4\n"
+                            "  3. Try alternate models in z.ai console"
                         )
                 except:
                     pass
