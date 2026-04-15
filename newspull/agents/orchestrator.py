@@ -33,6 +33,15 @@ class OrchestratorAgent:
 
     async def run(self) -> tuple[int, list[str]]:
         """Run full pipeline. Returns (articles_saved, error_messages)."""
+        import os
+
+        # Check API key early
+        if not os.environ.get("ZHIPUAI_API_KEY"):
+            print("[red]✗[/red] ZHIPUAI_API_KEY not set!")
+            print("[yellow]Set it in your .env file:[/yellow]")
+            print("  ZHIPUAI_API_KEY=your-api-key-here")
+            return 0, ["API key not configured"]
+
         prefs = load_prefs()
         sources = self._build_sources(prefs)
 
@@ -59,7 +68,12 @@ class OrchestratorAgent:
         print(f"[cyan]→[/cyan] Summarizing {len(raw_articles)} article(s)...")
         summaries = await digester.digest_all(raw_articles, prefs)
         if not summaries:
-            print(f"[yellow]⚠[/yellow] No summaries generated (LLM may have failed).")
+            print(f"[red]✗[/red] Summarization failed for all articles!")
+            print("[yellow]Common causes:[/yellow]")
+            print("  • API key is invalid or missing")
+            print("  • Check your .env file: cat .env")
+            print("  • Verify API key: https://open.bigmodel.cn/usercenter/apikeys")
+            print("  • Check logs: tail -f ~/.newspull/newspull.log 2>/dev/null")
             return 0, errors
 
         print(f"[cyan]→[/cyan] Scoring and ranking {len(summaries)} article(s)...")

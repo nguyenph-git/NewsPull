@@ -31,6 +31,21 @@ if env_file.exists():
     from dotenv import load_dotenv
     load_dotenv(env_file)
 
+# Set up logging
+import logging
+log_dir = Path.home() / ".newspull"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "newspull.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stderr)
+    ]
+)
+
 def main():
     """Main entry point"""
     # Check for API key

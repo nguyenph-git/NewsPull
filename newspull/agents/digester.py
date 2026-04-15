@@ -1,10 +1,13 @@
 import asyncio
 import json
 import os
+import logging
 
 from zhipuai import ZhipuAI
 
 from ..models import RawArticle, SummarizedArticle
+
+logger = logging.getLogger(__name__)
 
 
 class DigesterAgent:
@@ -35,7 +38,8 @@ class DigesterAgent:
                 source=article.source,
                 bullets=data["bullets"][:keypoints],
             )
-        except Exception:
+        except Exception as e:
+            logger.error("Failed to summarize article %s: %s", article.url, e)
             return None
 
     async def digest_all(
