@@ -11,6 +11,29 @@ A personal news aggregation and AI summarization system that automatically gathe
 - **Natural language feedback** — Tune your feed without editing config files
 - **Multiple sources** — RSS feeds, HackerNews, Reddit, YouTube
 
+## Quick Start
+
+**Fastest way to get started** (one command):
+
+```bash
+# Clone and install
+git clone https://github.com/your-username/NewsPull.git
+cd NewsPull
+pip install -e ".[dev]"
+
+# Set API key
+export ZHIPUAI_API_KEY="your-api-key"
+
+# Run newspull
+./run                    # Show latest feed
+./run fetch               # Fetch new content
+./run web                 # Start web UI
+```
+
+The `./run` script checks for your API key and provides helpful setup instructions if missing.
+
+---
+
 ## Architecture
 
 NewsPull uses a 5-agent AGNO architecture:
