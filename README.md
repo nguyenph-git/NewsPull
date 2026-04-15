@@ -22,7 +22,8 @@ cd NewsPull
 pip install -e ".[dev]"
 
 # Set API key
-export ZHIPUAI_API_KEY="your-api-key"
+cp .env.example .env
+# Then edit .env and add: ZHIPUAI_API_KEY=your-api-key
 
 # Run newspull
 ./run                    # Show latest feed
