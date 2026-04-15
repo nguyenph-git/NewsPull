@@ -50,6 +50,7 @@ class DigesterAgent:
                 self.client.chat.completions.create,
                 model="glm-4",
                 messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
             )
             content = response.choices[0].message.content
             # Try to parse as JSON, fallback to extracting bullets from text
