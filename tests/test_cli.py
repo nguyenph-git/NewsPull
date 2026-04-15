@@ -1,8 +1,7 @@
 # tests/test_cli.py
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
-import json
+from unittest.mock import patch
+from datetime import datetime, timezone
 
 from newspull.cli.main import app
 
@@ -19,7 +18,7 @@ def make_db_article(n=1):
         "credibility_score": 0.9,
         "rank_score": 0.85,
         "cross_ref_count": 1,
-        "fetched_at": datetime.utcnow().isoformat(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
         "read": 0,
     }
 

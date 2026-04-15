@@ -1,9 +1,7 @@
 import asyncio
-from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.rule import Rule
 
 from newspull import db
 from newspull.config import load_prefs, save_prefs
@@ -52,6 +50,7 @@ def pull():
 @app.command()
 def fetch():
     """Trigger full agent pipeline — fetch new content from all sources."""
+    db.init_db()
     console.print("Fetching...")
     agent = OrchestratorAgent()
     saved, errors = asyncio.run(agent.run())
@@ -107,8 +106,16 @@ def config_remove_source(source_type: str, value: str):
 @config_app.command("set-weight")
 def config_set_weight(category: str, key: str, value: float):
     """Set a topic or source weight. E.g.: set-weight topic ai 0.9"""
+    _CATEGORY_MAP = {
+        "topic": "topics",
+        "topics": "topics",
+        "source": "sources",
+        "sources": "sources",
+        "credibility": "credibility",
+        "digester": "digester",
+    }
     prefs = load_prefs()
-    category_key = f"{category}s" if not category.endswith("s") else category
+    category_key = _CATEGORY_MAP.get(category.lower(), category)
     if category_key not in prefs:
         prefs[category_key] = {}
     prefs[category_key][key] = value
@@ -135,9 +142,10 @@ def _render_feed(articles: list[dict]) -> None:
 
 
 def _review_prompt(force: bool = False) -> None:
-    answer = typer.prompt("Do you want to leave a review?", default="n")
-    if answer.lower() not in ("y", "yes"):
-        return
+    if not force:
+        answer = typer.prompt("Do you want to leave a review?", default="n")
+        if answer.lower() not in ("y", "yes"):
+            return
     review = typer.prompt("Type your review below")
     if review.strip():
         agent = FeedbackAgent()
