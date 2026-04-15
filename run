@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""
+NewsPull launcher script
+
+Run newspull with a single command:
+
+    ./run [args]
+
+Examples:
+    ./run                    # Show latest feed
+    ./run fetch               # Fetch new content
+    ./run pull                # Show backlog
+    ./run web                 # Start web UI
+    ./run feedback            # Provide feedback
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Add newspull to Python path if installed in development mode
+project_root = Path(__file__).parent
+if (project_root / "newspull").exists():
+    src_path = project_root / "newspull"
+    if str(src_path) not in sys.path:
+        sys.path.insert(0, str(src_path))
+
+def main():
+    """Main entry point"""
+    # Check for API key
+    if not os.environ.get("ZHIPUAI_API_KEY"):
+        print("\x1b[31m✗ ZHIPUAI_API_KEY environment variable not set\x1b[0m", file=sys.stderr)
+        print("\x1b[33mTo get started:\x1b[0m", file=sys.stderr)
+        print("  1. Get an API key from https://open.bigmodel.cn/usercenter/apikeys", file=sys.stderr)
+        print("  2. Set it with: export ZHIPUAI_API_KEY='your-key-here'", file=sys.stderr)
+        print("  3. Add to ~/.zshrc or ~/.bashrc to persist:", file=sys.stderr)
+        print("     echo 'export ZHIPUAI_API_KEY=\"your-key-here\"' >> ~/.zshrc", file=sys.stderr)
+        sys.exit(1)
+
+    # Import and run newspull CLI
+    try:
+        from newspull.cli.main import app
+        app()
+    except ImportError as e:
+        print(f"\x1b[31m✗ Failed to import newspull: {e}\x1b[0m", file=sys.stderr)
+        print("\x1b[33mTry installing in development mode:\x1b[0m", file=sys.stderr)
+        print("  pip install -e '.[dev]'", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
