@@ -19,7 +19,7 @@ A personal news aggregation and AI summarization system that automatically gathe
 # Clone and install
 git clone https://github.com/your-username/NewsPull.git
 cd NewsPull
-pip install -e ".[dev]"
+uv sync --dev
 
 # Set API key
 cp .env.example .env
@@ -59,6 +59,7 @@ Raw articles are never persisted to disk — only final ranked articles are stor
 ### Prerequisites
 
 - Python 3.11 or later
+- uv (fast Python package manager) — Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - ZhipuAI API key (for GLM-4 models)
 
 ### Install
@@ -68,8 +69,8 @@ Raw articles are never persisted to disk — only final ranked articles are stor
 git clone https://github.com/your-username/NewsPull.git
 cd NewsPull
 
-# Install in development mode
-pip install -e ".[dev]"
+# Install in development mode (using uv for speed)
+uv sync --dev
 
 # Install Playwright browsers (for JavaScript-heavy sources)
 playwright install chromium

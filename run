@@ -50,7 +50,7 @@ def main():
     except ImportError as e:
         print(f"\x1b[31m✗ Failed to import newspull: {e}\x1b[0m", file=sys.stderr)
         print("\x1b[33mTry installing in development mode:\x1b[0m", file=sys.stderr)
-        print("  pip install -e '.[dev]'", file=sys.stderr)
+        print("  uv sync --dev'", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
