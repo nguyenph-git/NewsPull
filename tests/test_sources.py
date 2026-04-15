@@ -106,3 +106,88 @@ def test_hn_source_returns_empty_on_error():
         source = HackerNewsSource()
         articles = source.fetch()
     assert articles == []
+
+
+from newspull.sources.reddit import RedditSource
+from newspull.sources.youtube import YouTubeSource
+
+FAKE_REDDIT_RESPONSE = {
+    "data": {
+        "children": [
+            {
+                "data": {
+                    "title": "Reddit Article One",
+                    "url": "https://reddit.com/r/MachineLearning/comments/abc",
+                    "selftext": "Some Reddit post text.",
+                    "score": 500,
+                }
+            },
+            {
+                "data": {
+                    "title": "Reddit Article Two",
+                    "url": "https://external.com/paper",
+                    "selftext": "",
+                    "score": 200,
+                }
+            },
+        ]
+    }
+}
+
+FAKE_YOUTUBE_XML = """<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <title>YouTube Video One</title>
+    <link href="https://www.youtube.com/watch?v=abc123"/>
+    <media:group xmlns:media="http://search.yahoo.com/mrss/">
+      <media:description>Video description here.</media:description>
+    </media:group>
+  </entry>
+</feed>"""
+
+
+def test_reddit_source_returns_raw_articles():
+    with patch("httpx.get") as mock_get:
+        mock_response = MagicMock()
+        mock_response.json.return_value = FAKE_REDDIT_RESPONSE
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        source = RedditSource("r/MachineLearning")
+        articles = source.fetch()
+
+    assert len(articles) == 2
+    assert articles[0].title == "Reddit Article One"
+    assert articles[0].source == "reddit"
+
+
+def test_reddit_source_returns_empty_on_error():
+    with patch("httpx.get") as mock_get:
+        mock_get.side_effect = Exception("blocked")
+        source = RedditSource("r/MachineLearning")
+        articles = source.fetch()
+    assert articles == []
+
+
+def test_youtube_source_returns_raw_articles():
+    with patch("httpx.get") as mock_get:
+        mock_response = MagicMock()
+        mock_response.text = FAKE_YOUTUBE_XML
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        source = YouTubeSource("UCtest123")
+        articles = source.fetch()
+
+    assert len(articles) == 1
+    assert articles[0].title == "YouTube Video One"
+    assert articles[0].source == "youtube"
+    assert "youtube.com/watch" in articles[0].url
+
+
+def test_youtube_source_returns_empty_on_error():
+    with patch("httpx.get") as mock_get:
+        mock_get.side_effect = Exception("timeout")
+        source = YouTubeSource("UCtest123")
+        articles = source.fetch()
+    assert articles == []
