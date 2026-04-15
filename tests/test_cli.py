@@ -110,3 +110,17 @@ def test_config_set_weight(tmp_prefs_path, default_prefs):
     assert result.exit_code == 0
     prefs = config_module.load_prefs()
     assert prefs["topics"]["ai"] == 0.5
+
+
+def test_feedback_command_skips_yesno_gate(tmp_db_path, tmp_prefs_path, default_prefs):
+    import newspull.config as config_module
+    config_module.save_prefs(default_prefs)
+
+    with patch("newspull.cli.main.typer.prompt", return_value="great content") as mock_prompt, \
+         patch("newspull.cli.main.asyncio.run", return_value=True):
+        result = runner.invoke(app, ["feedback"])
+
+    assert result.exit_code == 0
+    # Prompt called exactly once — for the review text, not the yes/no gate
+    assert mock_prompt.call_count == 1
+    assert "preferences updated" in result.output

@@ -13,6 +13,15 @@ config_app = typer.Typer()
 app.add_typer(config_app, name="config")
 console = Console()
 
+_CATEGORY_MAP = {
+    "topic": "topics",
+    "topics": "topics",
+    "source": "sources",
+    "sources": "sources",
+    "credibility": "credibility",
+    "digester": "digester",
+}
+
 
 @app.callback(invoke_without_command=True)
 def show_feed(ctx: typer.Context):
@@ -106,14 +115,6 @@ def config_remove_source(source_type: str, value: str):
 @config_app.command("set-weight")
 def config_set_weight(category: str, key: str, value: float):
     """Set a topic or source weight. E.g.: set-weight topic ai 0.9"""
-    _CATEGORY_MAP = {
-        "topic": "topics",
-        "topics": "topics",
-        "source": "sources",
-        "sources": "sources",
-        "credibility": "credibility",
-        "digester": "digester",
-    }
     prefs = load_prefs()
     category_key = _CATEGORY_MAP.get(category.lower(), category)
     if category_key not in prefs:
