@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsPull</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; max-width: 800px; margin: 0 auto; padding: 1rem; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #333; margin-bottom: 1.5rem; }
+    header h1 { font-size: 1.4rem; color: #fff; }
+    .btn { background: #222; border: 1px solid #444; color: #e0e0e0; padding: 0.4rem 0.9rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+    .btn:hover { background: #333; }
+    .article { border: 1px solid #222; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+    .article-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; }
+    .article-title { font-weight: 600; font-size: 1rem; color: #fff; flex: 1; margin-right: 1rem; }
+    .article-meta { font-size: 0.8rem; color: #888; white-space: nowrap; }
+    .score { color: #f0c040; }
+    ul.bullets { list-style: disc; padding-left: 1.4rem; }
+    ul.bullets li { margin: 0.3rem 0; font-size: 0.92rem; color: #ccc; }
+    .source-tag { font-size: 0.78rem; color: #666; margin-top: 0.5rem; }
+    .empty { text-align: center; padding: 3rem; color: #666; }
+    .empty code { background: #1a1a1a; padding: 0.2rem 0.5rem; border-radius: 3px; color: #aaa; }
+    .review-section { margin-top: 2rem; border-top: 1px solid #333; padding-top: 1.5rem; }
+    .review-section h3 { font-size: 0.95rem; color: #aaa; margin-bottom: 0.8rem; }
+    .review-form { display: flex; gap: 0.6rem; }
+    .review-input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; padding: 0.5rem 0.8rem; border-radius: 4px; font-size: 0.9rem; }
+    .review-input:focus { outline: none; border-color: #555; }
+    #review-result { margin-top: 0.6rem; font-size: 0.85rem; color: #4caf50; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NewsPull</h1>
+    <div>
+      <button class="btn" hx-post="/fetch" hx-swap="none"
+              hx-on::after-request="document.location.reload()">Fetch</button>
+    </div>
+  </header>
+
+  {% if articles %}
+    {% for article in articles %}
+    <div class="article" id="article-{{ article.id }}">
+      <div class="article-header">
+        <a class="article-title" href="{{ article.url }}" target="_blank" rel="noopener">
+          {{ article.title }}
+        </a>
+        <span class="article-meta">
+          <span class="score">★ {{ "%.2f"|format(article.credibility_score) }}</span>
+          {% if article.cross_ref_count > 1 %}
+            &nbsp;· {{ article.cross_ref_count }} src
+          {% endif %}
+        </span>
+      </div>
+      <ul class="bullets">
+        {% for bullet in article.bullet_summary %}
+        <li>{{ bullet }}</li>
+        {% endfor %}
+      </ul>
+      <div class="source-tag">· {{ article.source }}</div>
+    </div>
+    {% endfor %}
+
+    <script>
+      // Mark all displayed articles as read
+      const ids = [{% for a in articles %}{{ a.id }}{% if not loop.last %},{% endif %}{% endfor %}];
+      fetch('/mark-read', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids})
+      });
+    </script>
+  {% else %}
+    <div class="empty">
+      <p>No new stories.</p>
+      <p style="margin-top:0.5rem">Run <code>newspull fetch</code> to pull fresh content.</p>
+    </div>
+  {% endif %}
+
+  <div class="review-section">
+    <h3>Leave a review to tune your feed</h3>
+    <div class="review-form">
+      <input class="review-input" id="review-input" type="text"
+             placeholder="e.g. use simpler language, add more keypoints…">
+      <button class="btn"
+              hx-post="/review"
+              hx-vals='js:{"review": document.getElementById("review-input").value}'
+              hx-target="#review-result"
+              hx-swap="innerHTML">Send</button>
+    </div>
+    <div id="review-result"></div>
+  </div>
+
+  <script>
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+      if (evt.detail.pathInfo && evt.detail.pathInfo.requestPath === '/review') {
+        try {
+          const resp = JSON.parse(evt.detail.xhr.responseText);
+          document.getElementById('review-result').textContent =
+            resp.success ? '✓ Preferences updated.' : '✗ Could not update. Check API key.';
+          if (resp.success) document.getElementById('review-input').value = '';
+        } catch(e) {}
+      }
+    });
+  </script>
+</body>
+</html>
