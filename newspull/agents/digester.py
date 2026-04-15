@@ -27,7 +27,7 @@ class DigesterAgent:
         try:
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model="glm-4-flash",
+                model="glm-4-flashx",
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
             )
@@ -39,7 +39,22 @@ class DigesterAgent:
                 bullets=data["bullets"][:keypoints],
             )
         except Exception as e:
+            error_msg = str(e)
             logger.error("Failed to summarize article %s: %s", article.url, e)
+
+            # Parse zhipuai error for better user feedback
+            if hasattr(e, 'response') and hasattr(e.response, 'json'):
+                try:
+                    error_data = e.response.json()
+                    if error_data.get('error', {}).get('code') == 1211:
+                        logger.error("Model does not exist - check model name in digester.py")
+                        raise ValueError(
+                            "GLM model not found. Please verify:\n"
+                            "  1. Your API key has access to the model\n"
+                            "  2. Try changing model in digester.py from 'glm-4-flashx' to 'glm-4-flash' or 'glm-4'"
+                        )
+                except:
+                    pass
             return None
 
     async def digest_all(
