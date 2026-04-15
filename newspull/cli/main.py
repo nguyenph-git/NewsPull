@@ -60,12 +60,8 @@ def pull():
 def fetch():
     """Trigger full agent pipeline — fetch new content from all sources."""
     db.init_db()
-    console.print("Fetching...")
     agent = OrchestratorAgent()
     saved, errors = asyncio.run(agent.run())
-    console.print(f"[green]✓[/green] Saved {saved} new articles.")
-    for err in errors:
-        console.print(f"[yellow]⚠[/yellow] {err}")
 
 
 @app.command()

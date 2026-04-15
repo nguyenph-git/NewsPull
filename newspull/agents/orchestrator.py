@@ -1,5 +1,8 @@
 import asyncio
 
+from rich.console import Console
+from rich import print as rprint
+
 from ..config import load_prefs
 from .. import db
 from .gatherer import GathererAgent
@@ -10,6 +13,8 @@ from ..sources.hn import HackerNewsSource
 from ..sources.reddit import RedditSource
 from ..sources.youtube import YouTubeSource
 from ..models import RankedArticle
+
+console = Console()
 
 
 class OrchestratorAgent:
@@ -31,23 +36,40 @@ class OrchestratorAgent:
         prefs = load_prefs()
         sources = self._build_sources(prefs)
 
+        if not sources:
+            print("[yellow]⚠[/yellow] No sources configured. Add sources with:")
+            print("  newspull config add-source reddit r/MachineLearning")
+            print("  newspull config add-source rss https://example.com/feed.xml")
+            return 0, ["No sources configured"]
+
         gatherer = GathererAgent(sources)
         digester = DigesterAgent()
         taster = TasterAgent()
 
+        print(f"[cyan]→[/cyan] Fetching from {len(sources)} source(s)...")
         raw_articles, errors = await gatherer.fetch_all()
         if not raw_articles:
+            print(f"[yellow]⚠[/yellow] No articles fetched from any source.")
+            if errors:
+                print("[red]Errors:[/red]")
+                for err in errors:
+                    print(f"  [red]•[/red] {err}")
             return 0, errors
 
+        print(f"[cyan]→[/cyan] Summarizing {len(raw_articles)} article(s)...")
         summaries = await digester.digest_all(raw_articles, prefs)
         if not summaries:
+            print(f"[yellow]⚠[/yellow] No summaries generated (LLM may have failed).")
             return 0, errors
 
+        print(f"[cyan]→[/cyan] Scoring and ranking {len(summaries)} article(s)...")
         ranked = await taster.taste_all(summaries, prefs)
 
+        print(f"[cyan]→[/cyan] Saving to database...")
         saved = 0
         for article in ranked:
             if db.save_article(article) is not None:
                 saved += 1
 
+        print(f"[green]✓[/green] Pipeline complete: {saved} article(s) saved, {len(errors)} error(s)")
         return saved, errors
