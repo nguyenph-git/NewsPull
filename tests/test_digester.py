@@ -71,4 +71,4 @@ def test_digest_all_filters_none_results():
         results = asyncio.run(agent.digest_all(articles, prefs))
 
     assert len(results) == 1
-    assert results[0].url == "https://a.com"
+    assert any(r.url == "https://a.com" for r in results)
