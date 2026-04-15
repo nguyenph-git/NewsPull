@@ -27,14 +27,20 @@ def create_app() -> Flask:
         text = request.json.get("review", "").strip()
         if not text:
             return jsonify({"success": False, "error": "empty review"}), 400
-        agent = FeedbackAgent()
-        success = asyncio.run(agent.process(text))
-        return jsonify({"success": success})
+        try:
+            agent = FeedbackAgent()
+            success = asyncio.run(agent.process(text))
+            return jsonify({"success": success})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
 
     @app.route("/fetch", methods=["POST"])
     def fetch():
-        agent = OrchestratorAgent()
-        saved, errors = asyncio.run(agent.run())
-        return jsonify({"saved": saved, "errors": errors})
+        try:
+            agent = OrchestratorAgent()
+            saved, errors = asyncio.run(agent.run())
+            return jsonify({"saved": saved, "errors": errors})
+        except Exception as e:
+            return jsonify({"saved": 0, "errors": [str(e)]}), 500
 
     return app

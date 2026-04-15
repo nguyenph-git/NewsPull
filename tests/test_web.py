@@ -1,6 +1,6 @@
 # tests/test_web.py
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -27,7 +27,7 @@ def make_db_article(n=1):
         "credibility_score": 0.9,
         "rank_score": 0.85,
         "cross_ref_count": 1,
-        "fetched_at": datetime.utcnow().isoformat(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
         "read": 0,
     }
 
@@ -81,7 +81,12 @@ def test_fetch_endpoint_runs_pipeline(client, tmp_db_path, tmp_prefs_path, defau
     import newspull.config as config_module
     config_module.save_prefs(default_prefs)
 
-    with patch("newspull.web.app.asyncio.run", return_value=(5, [])):
+    from unittest.mock import AsyncMock
+
+    with patch("newspull.web.app.OrchestratorAgent") as MockOrchestrator:
+        instance = MockOrchestrator.return_value
+        instance.run = AsyncMock(return_value=(5, []))
+
         response = client.post("/fetch")
 
     assert response.status_code == 200
