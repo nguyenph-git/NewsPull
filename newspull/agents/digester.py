@@ -14,6 +14,27 @@ class DigesterAgent:
     def __init__(self):
         self.client = ZhipuAI(api_key=os.environ.get("ZHIPUAI_API_KEY", ""))
 
+    @staticmethod
+    def _extract_bullets_from_text(text: str, max_bullets: int) -> list[str]:
+        """Extract bullet-like sentences from text when JSON parsing fails."""
+        import re
+
+        # Try to find bullet-like patterns
+        bullet_pattern = r'(?m)^[-•*]\s*(.*?)(?=\n|$)'
+        matches = re.findall(bullet_pattern, text, re.MULTILINE)
+
+        if matches:
+            return [m.strip() for m in matches[:max_bullets]]
+
+        # If no bullets found, split by sentences and limit
+        sentences = [s.strip() for s in text.split('.') if s.strip()]
+        return sentences[:max_bullets] if sentences else []
+
+
+class DigesterAgent:
+    def __init__(self):
+        self.client = ZhipuAI(api_key=os.environ.get("ZHIPUAI_API_KEY", ""))
+
     async def digest(
         self, article: RawArticle, style: str = "concise", keypoints: int = 5
     ) -> SummarizedArticle | None:
@@ -29,17 +50,28 @@ class DigesterAgent:
                 self.client.chat.completions.create,
                 model="glm-4",
                 messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
             )
-            data = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            # Try to parse as JSON, fallback to extracting bullets from text
+            try:
+                data = json.loads(content)
+                if "bullets" in data:
+                    bullets = data["bullets"][:keypoints]
+                else:
+                    bullets = self._extract_bullets_from_text(content, keypoints)
+            except json.JSONDecodeError:
+                # If not JSON, try to extract bullet points from text
+                bullets = self._extract_bullets_from_text(content, keypoints)
+
             return SummarizedArticle(
-                title=data.get("title", article.title),
+                title=article.title,
                 url=article.url,
                 source=article.source,
-                bullets=data["bullets"][:keypoints],
+                bullets=bullets,
             )
         except Exception as e:
             error_msg = str(e)
+            logger.error("Failed to summarize article %s: %s", article.url, e, exc_info=True)
             logger.error("Failed to summarize article %s: %s", article.url, e)
 
             # Parse zhipuai error for better user feedback
