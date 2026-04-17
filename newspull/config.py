@@ -11,8 +11,8 @@ DEFAULT_PREFS: dict = {
     "sources": {
         "reddit": ["r/MachineLearning", "r/technology"],
         "youtube": [],
-        "rss": [],
-        "hn": True,
+        "rss": ["https://git.news/"],
+        "hn": False
     },
     "credibility": {"min_score": 0.5, "cross_ref_bonus": 0.2},
     "digester": {"style": "concise", "keypoints": 5},

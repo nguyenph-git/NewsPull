@@ -27,4 +27,5 @@ class GathererAgent:
         return articles, errors
 
     async def _fetch_source(self, source: Source) -> list[RawArticle]:
-        return await asyncio.to_thread(source.fetch)
+        articles = await asyncio.to_thread(source.fetch)
+        return articles[:1]
